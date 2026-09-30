@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тренажёр логиста ТК «ЛУЧ»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{--bg:#F7F4EE;--card:#FFFDF9;--ink:#1F1C17;--mut:#6F675B;--rule:#D9D2C3;--acc:#2B4C7E;--acc-t:#E4EAF3;--ok:#2F6B47;--ok-t:#E3F0E7;--bad:#9B2C2C;--bad-t:#F6E3E1;
+--serif:"Literata",Georgia,serif;--sans:"Golos Text",system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181713;--card:#211F1A;--ink:#EFEAE0;--mut:#A79F90;--rule:#3A362D;--acc:#8FB0E3;--acc-t:#232B38;--ok:#7CC49A;--ok-t:#1F2C24;--bad:#E38C8C;--bad-t:#33211F}}
+:root[data-theme="dark"]{--bg:#181713;--card:#211F1A;--ink:#EFEAE0;--mut:#A79F90;--rule:#3A362D;--acc:#8FB0E3;--acc-t:#232B38;--ok:#7CC49A;--ok-t:#1F2C24;--bad:#E38C8C;--bad-t:#33211F}
+*,*:before,*:after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans)}
+main{max-width:40rem;margin:0 auto;padding:1.5rem 1.1rem 4rem}
+h1,h2,.q{font-family:var(--serif);font-weight:600;line-height:1.3}
+h1{font-size:1.9rem;margin:2rem 0 .6rem}h2{font-size:1.3rem;margin:1.6rem 0 .6rem}
+.q{font-size:1.2rem;line-height:1.5;margin:.8rem 0 1.1rem}
+.mut{color:var(--mut)}.bar{height:3px;background:var(--rule);margin:.5rem 0 0}.bar i{display:block;height:100%;background:var(--acc)}
+.topic{color:var(--acc);font-weight:500;font-size:.9rem}
+button{font:inherit;color:inherit;cursor:pointer}
+.opt{display:block;width:100%;text-align:left;margin:.5rem 0;padding:.8rem 1rem;background:var(--card);border:1px solid var(--rule);border-radius:6px}
+.opt:hover:not(:disabled){border-color:var(--acc)}.opt:disabled{cursor:default}
+.opt.ok{background:var(--ok-t);border-color:var(--ok)}.opt.bad{background:var(--bad-t);border-color:var(--bad)}
+.opt.sel{background:var(--acc-t);border-color:var(--acc)}
+.fb{margin:1.2rem 0;padding:.2rem 0 .2rem 1rem;border-left:3px solid var(--acc)}.fb.ok{border-color:var(--ok)}.fb.bad{border-color:var(--bad)}
+.fb b{display:block;margin-bottom:.2rem}
+.btn{padding:.75rem 1.4rem;background:var(--acc);color:var(--bg);border:0;border-radius:6px;font-weight:600}
+.btn.ghost{background:none;color:var(--acc);border:1px solid var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0 1.4rem}
+.chip{padding:.4rem .85rem;border:1px solid var(--rule);border-radius:99px;background:var(--card)}.chip[aria-pressed=true]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+table{width:100%;border-collapse:collapse;margin:.5rem 0}td{padding:.5rem 0;border-bottom:1px solid var(--rule)}td:last-child{text-align:right}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const Q=[
+{t:"Выдача груза",q:"Клиент в Златоусте получает три коробки. Одна повреждена. Он просит выдать две целые, а повреждённую оставить. Что делаете?",o:["Выдаю две целые, на третью составляю акт","Объясняю: при повреждении частичная выдача запрещена. Либо забирает все три с актом, либо отказывается от всего груза","Выдаю все три без акта, чтобы не спорить","Оставляю груз на складе до звонка отправителю"],a:1,e:"Если повреждено хотя бы одно место, частичная выдача не проводится. Исключений нет: груз забирают целиком с актом о повреждении или возвращают отправителю целиком."},
+{t:"Выдача груза",q:"Получатель не приходит за грузом. Как действуете по регламенту?",o:["Сразу возвращаю груз отправителю","Оповещаю получателя трижды (звонки и смс), затем связываюсь с отправителем","Выдаю груз любому, кто придёт с накладной","Жду, пока получатель сам объявится"],a:1,e:"Сначала три оповещения звонками и смс. Если реакции нет, связываются с отправителем. Дальше груз может уйти на центральный склад, а после бесплатного срока начисляется плата за каждый день."},
+{t:"Выдача груза",q:"Груз с наложенным платежом. Получатель просит выдать сейчас, а оплатить завтра. Ваши действия?",o:["Выдаю: клиент постоянный","Выдаю половину груза","Выдаю только после полной оплаты получателем","Прошу отправителя оплатить за клиента"],a:2,e:"Груз с наложенным платежом выдают только после полной оплаты получателем. Если получатель отказался, груз возвращают."},
+{t:"Очерёдность",type:"order",q:"Утро, и заявок много. Расставьте по очерёдности, что делать первым: нажимайте заявки по порядку.",items:["Забор, просроченный со вчерашнего дня","Срочная заявка от малого склада","Лёгкая заявка на доставку","Тяжёлая заявка на доставку"],e:"Сначала то, что просрочено больше суток, затем срочные заявки от малых складов и VIP-клиентов, потом остальные по весу и объёму от меньшего к большему."},
+{t:"Очерёдность",q:"Идёт погрузка машины МТП. Какой груз грузят в самую последнюю очередь?",o:["Груз, лежащий на складе больше суток","Заявки VIP-клиентов","Сборные отправки до 30 кг","Негабарит, у которого длина двух сторон больше 2 метров"],a:3,e:"Порядок погрузки: груз старше 24 часов, VIP и «Особый контроль», сборные до 30 кг, тяжёлый груз по возрастанию веса, и в самом конце негабарит."},
+{t:"Склад и связь",q:"Суббота, вечер. Машина опаздывает, склад не дозвонился до водителя и передал проблему логисту МТП №1. Он не отвечает. Кому звонить дальше?",o:["Сразу операционному директору","Логисту МТП №2","Клиенту","Никому до понедельника"],a:1,e:"В нерабочее время цепочка такая: логист МТП №1, потом №2, потом руководитель отдела логистики, потом операционный директор."},
+{t:"Склад и связь",q:"Через какое время после последнего сканирования заявка попадает в модуль «Потеряшки. Выдача»?",o:["Через 2 часа","Более чем через 8 часов","Через сутки","Через 3 дня"],a:1,e:"В модуль попадают заявки, которые не выданы и не просканированы ревизией более 8 часов. Руководитель филиала проверяет его ежедневно и выясняет причины."},
+{t:"Перевозчики",q:"Срочно нужна машина. Вы нашли перевозчика, который готов ехать прямо сейчас. Что сделать до звонка и заказа?",o:["Ничего, время дороже","Проверить рейтинг, документы и историю перевозчика на площадке","Попросить скидку","Взять предоплату"],a:1,e:"Поспешный выбор без проверки рейтинга и документов приводит к срыву рейса. Разбор из курса: водитель опоздал на час, а пара минут проверки помогла бы этого избежать."},
+{t:"Перевозчики",q:"Вы заносите водителя к перевозчику для рейса с ЭТрН. Что нужно проверить заранее?",o:["Что у водителя есть свой ИП","Что перевозчик уже занёс водителя в ЭДО","Что водитель работал с нами раньше","Ничего, ЭТрН сформируется сам"],a:1,e:"Если водителя нет в списке перевозчика в ЭДО, он не сможет подписывать документы и ЭТрН не сформируется. У водителя также должно быть установлено мобильное приложение."},
+{t:"Документы",q:"Вы начинаете планировать маршруты курьеров на забор. Что проверить в заявке в первую очередь?",o:["Цвет машины курьера","Статус поручения экспедитору (ПЭ) и КПП","Только адрес","Ничего, проверит склад"],a:1,e:"Если ПЭ не подписано, заявка не принимается в работу, и забор придётся отменять. КПП теперь обязательное поле, его нужно сверить с актуальными данными."},
+{t:"Документы",q:"В заявке промышленный редуктор: 420 × 120 × 100 см, вес 30 кг. Что делаете?",o:["Назначаю исполнителя как есть","Сам измеряю груз","Замечаю расхождение и уточняю у менеджера","Ставлю вес 300 кг наугад"],a:2,e:"Габариты большие, а вес слишком маленький: вероятная опечатка. Логист не измеряет груз сам, но может заметить расхождение и запросить уточнение. В реальном разборе вес оказался 300 кг."},
+{t:"Документы",q:"Машина едет на закрытый объект. Данные для пропуска вы отправили водителю на почту. Достаточно?",o:["Да, почта надёжна","Нет: нужен полный пакет документов заранее, а запрос лучше продублировать в мессенджер и убедиться, что заявку приняли","Нет, но подойдёт устная договорённость","Да, водитель сам разберётся на КПП"],a:1,e:"Пропуск нельзя оставлять на самотёк: если данные ушли только на почту, их могут потерять. Иначе машину не пропустят, и водитель будет стоять на КПП."}
+];
+const app=document.getElementById("app");
+let S={},topics=[...new Set(Q.map(x=>x.t))],pick=new Set(topics);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function home(){
+ let best="";try{best=localStorage.getItem("best")||""}catch(e){}
+ app.innerHTML=`<h1>Тренажёр логиста ТК «ЛУЧ»</h1>
+ <p class="mut">Ситуации из рабочей смены по материалам курса. После каждого ответа вы увидите правило, а ошибки вернутся в конце для закрепления.</p>
+ <h2>Темы</h2><div class="chips">${topics.map(t=>`<button class="chip" aria-pressed="${pick.has(t)}" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+ <button class="btn" id="go" ${pick.size?"":"disabled"}>Начать смену</button>${best?`<p class="mut">Лучший результат: ${esc(best)}</p>`:""}`;
+ app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const t=b.dataset.t;pick.has(t)?pick.delete(t):pick.add(t);home()});
+ document.getElementById("go").onclick=start;
+}
+function start(){const qs=shuf(Q.filter(x=>pick.has(x.t)));S={queue:qs,i:0,total:qs.length,ok:0,by:{},retry:new Set(),chosen:[]};show()}
+function show(){
+ const q=S.queue[S.i];S.chosen=[];S.done=false;
+ const retry=S.retry.has(q)?" (повторение)":"";
+ const head=`<div class="row"><span class="topic">${esc(q.t)}${retry}</span><span class="mut">${S.i+1} из ${S.queue.length}</span></div><div class="bar"><i style="width:${S.i/S.queue.length*100}%"></i></div><p class="q">${esc(q.q)}</p>`;
+ if(q.type==="order"){S.items=shuf(q.items);drawOrder(head,q)}
+ else{app.innerHTML=head+q.o.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o)}</button>`).join("")+`<div id="fb"></div>`;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.k===q.a,q,b))}
+}
+function drawOrder(head,q){
+ app.innerHTML=head+S.items.map((it,k)=>{const n=S.chosen.indexOf(k);return `<button class="opt ${n>=0?"sel":""}" data-k="${k}" ${S.done?"disabled":""}>${n>=0?`<b>${n+1}.</b> `:""}${esc(it)}</button>`}).join("")+`<div id="fb"></div><button class="btn ghost" id="rs">Сбросить</button>`;
+ app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(S.chosen.includes(k))return;S.chosen.push(k);
+  if(S.chosen.length<S.items.length)return drawOrder(head,q);
+  S.done=true;const good=S.chosen.every((k,n)=>S.items[k]===q.items[n]);drawOrder(head,q);fin(good,q)});
+ document.getElementById("rs").onclick=()=>{S.chosen=[];S.done=false;drawOrder(head,q)};
+}
+function answer(good,q,btn){
+ app.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===q.a)b.classList.add("ok")});
+ if(!good)btn.classList.add("bad");fin(good,q);
+}
+function fin(good,q){
+ const by=S.by[q.t]=S.by[q.t]||{ok:0,n:0};by.n++;
+ if(!S.retry.has(q)){if(good){S.ok++;by.ok++}else{S.retry.add(q);S.queue.push(q)}}
+ const last=S.i===S.queue.length-1;
+ const ans=q.type==="order"?`<p><b>Верный порядок:</b> ${q.items.map((x,n)=>`${n+1}. ${esc(x)}`).join("; ")}.</p>`:"";
+ document.getElementById("fb").innerHTML=`<div class="fb ${good?"ok":"bad"}"><b>${good?"Верно":"Не совсем"}</b>${ans}<p>${esc(q.e)}</p></div><button class="btn" id="nx">${last?"Смотреть итог":"Дальше"}</button>`;
+ document.getElementById("rs")?.remove();
+ document.getElementById("nx").onclick=()=>{last?result():(S.i++,show())};
+}
+function result(){
+ const pct=Math.round(S.ok/S.total*100),miss=[...S.retry];
+ try{const b=+(localStorage.getItem("bestn")||-1);if(pct>b){localStorage.setItem("bestn",pct);localStorage.setItem("best",pct+"% ("+S.ok+" из "+S.total+")")}}catch(e){}
+ app.innerHTML=`<h1>${pct}% с первой попытки</h1><p class="mut">${S.ok} из ${S.total} верно сразу. ${miss.length?"Ошибочные вопросы вы уже повторили в конце смены.":"Ошибок не было."}</p>
+ <h2>По темам</h2><table>${Object.entries(S.by).map(([t,v])=>`<tr><td>${esc(t)}</td><td>${v.ok} из ${v.n}</td></tr>`).join("")}</table>
+ ${miss.length?`<h2>Правила, которые стоит перечитать</h2>${miss.map(q=>`<div class="fb"><b>${esc(q.t)}</b><p>${esc(q.e)}</p></div>`).join("")}`:""}
+ <div class="row"><button class="btn" id="again">Ещё раз</button><button class="btn ghost" id="hm">К темам</button></div>`;
+ document.getElementById("again").onclick=start;document.getElementById("hm").onclick=home;
+}
+home();
+</script>
+</body>
+</html>
